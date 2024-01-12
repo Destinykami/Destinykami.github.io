@@ -7,8 +7,8 @@ redirect_from:
   - /about/
   - /about.html
 ---
-# About me
-Hello, I'm a student from Xiamen University, majoring in Computer Science and Technology.My research interests mainly focus on Operate System and Machine Learning.
+Hello, I'm a student from Xiamen University, majoring in Computer Science and Technology.  
+My research interests mainly focus on Operating System and Machine Learning.
 
 # News
 todo
