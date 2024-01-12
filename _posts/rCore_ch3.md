@@ -1,6 +1,7 @@
 ---
 title: 'rCore-ch3'
 date: 2024/1/12
+permalink: /posts/2024/01/rCore_ch3/
 tags:
   - rCore
   - OS

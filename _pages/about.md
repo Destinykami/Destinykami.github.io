@@ -9,7 +9,8 @@ redirect_from:
 ---
 Education
 ======
-* B.S. in Xiamen University, 2021 - now
+* B.S in Computer Science and Technology , School of Informatics , Xiamen University   
+  Sep , 2021 - now 
 
 About me
 ======
