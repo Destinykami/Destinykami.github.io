@@ -82,11 +82,11 @@ analytics:
 author:
   name             : "Kami"
   avatar           : "go.png"
-  bio              : "A student major in Computer Science and Technology in Xiamen University"
+  bio              : "A student studying Computer Science and Technology at Xiamen University."
   location         : "Xiamen,China"
-  employer         :
+  employer         : "Xiamen University"
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
-  googlescholar    : "http://yourfullgooglescholarurl.com"
+  googlescholar    : #"http://yourfullgooglescholarurl.com"
   email            : "kamiqwer000@gmail.com"
   researchgate     :  # example: "https://www.researchgate.net/profile/yourprofile"
   uri              :
