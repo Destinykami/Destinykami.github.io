@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 Hello, I'm a student from Xiamen University, majoring in Computer Science and Technology.  
-My research interests mainly focus on Operating System and Machine Learning.
+I'm currently learning Rust and Operating Systems. 
 
 Education
 ======
