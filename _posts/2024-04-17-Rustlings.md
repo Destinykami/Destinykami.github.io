@@ -267,3 +267,70 @@ fn your_order() {
         assert_eq!(your_order.count, 1);
     }
 ```
+
+hashmap2.rs
+
+Hash maps have a special API for this called entry that takes the key you want to check as a parameter. The return value of the entry method is an enum called Entry that represents a value that might or might not exist. Let’s say we want to check whether the key for the Yellow team has a value associated with it. 
+
+The or_insert method on Entry is defined to return a mutable reference to the value for the corresponding Entry key if that key exists, and if not, inserts the parameter as the new value for this key and returns a mutable reference to the new value. This technique is much cleaner than writing the logic ourselves and, in addition, plays more nicely with the borrow checker.
+
+```rust
+    for fruit in fruit_kinds {
+        // TODO: Insert new fruits if they are not already present in the
+        // basket. Note that you are not allowed to put any type of fruit that's
+        // already present!
+        basket.entry(fruit).or_insert(1);
+    }
+```
+
+errors2.rs  
+
+? 是 Rust 中的错误处理操作符。通常用于尝试解析或执行可能失败的操作，并在出现错误时提前返回错误，以避免程序崩溃或出现未处理的错误。
+
+具体来说，? 用于处理 Result 或 Option 类型的返回值。
+```rust
+pub fn total_cost(item_quantity: &str) -> Result<i32, ParseIntError> {
+    let processing_fee = 1;
+    let cost_per_item = 5;
+    let qty = item_quantity.parse::<i32>() ?; //加个问号就好
+
+    Ok(qty * cost_per_item + processing_fee)
+}
+```
+
+### Traits
+
+A trait is a collection of methods.
+
+Data types can implement traits. To do so, the methods making up the trait are defined for the data type. For example, the `String` data type implements the `From<&str>` trait. This allows a user to write `String::from("hello")`.
+
+In this way, traits are somewhat similar to Java interfaces and C++ abstract classes.
+
+Some additional common Rust traits include:
+
+- `Clone` (the `clone` method)
+- `Display` (which allows formatted display via `{}`)
+- `Debug` (which allows formatted display via `{:?}`)
+
+Because traits indicate shared behavior between data types, they are useful when writing generics.
+
+### Further information
+
+- [Traits](https://doc.rust-lang.org/book/ch10-02-traits.html)
+
+traits4.rs:
+
+创建关于共享行为(trait)的两个实例的泛型  
+```rust
+// YOU MAY ONLY CHANGE THE NEXT LINE
+fn compare_license_types<T:Licensed,U:Licensed>(software: T, software_two: U) -> bool {
+    software.licensing_info() == software_two.licensing_info()
+}
+```
+traits5.rs:  
+使用+来放行实现了多种共享行为的类型  
+```rust
+fn some_func<T:SomeTrait+OtherTrait>(item: T) -> bool {
+    item.some_function() && item.other_function()
+}
+```
