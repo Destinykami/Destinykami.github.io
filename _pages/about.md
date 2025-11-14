@@ -6,12 +6,15 @@ redirect_from:
   - /about/
   - /about.html
 ---
-Hello, I'm a student from Xiamen University, majoring in Computer Science and Technology.  
-I'm currently learning Rust and Operating Systems. 
+Hello, I'm now a master's student from Peking University, majoring in Software Engineering.  
+
+My research interests lie at the intersection of Machine Learning and Systems, including ML system architecture, model training efficiency, and resource-aware scheduling.
 
 Education
 ======
-* B.S in Computer Science and Technology , School of Informatics , Xiamen University   
-  Sep , 2021 - now 
+* M.S in Software Engineering, School of Software & Microelectronics, Peking University  
+  Sep , 2025 - now 
+* B.S in Computer Science and Technology, School of Informatics, Xiamen University   
+  Sep , 2021 - June , 2025 
 
 
