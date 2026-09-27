@@ -37,7 +37,8 @@ export const SITE: SiteConfig = {
 
   home: {
     careerHighlightCount: 4,
-    updateCount: 3,
+    // Hidden on purpose; set back to a positive number to re-show.
+    updateCount: 0,
     publicationCount: 3,
   },
 
@@ -69,7 +70,6 @@ export const PROFILE: ProfileConfig = {
 export const NAV_LINKS: LinkConfig[] = [
   { href: "/projects", label: "Projects" },
   { href: "/publications", label: "Publications" },
-  { href: "/teaching", label: "Teaching" },
   { href: "/blog", label: "Blog" },
 ]
 

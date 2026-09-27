@@ -60,7 +60,7 @@ const recentPostsMetadata = await Promise.all(
   <Profile profile={PROFILE} />
 
   {renderedUpdates.length > 0 && (
-      <Section title="Latest updates" moreLink="/now">
+      <Section title="Latest updates">
         <UpdatesInline
           renderedUpdates={renderedUpdates}
           itemClass="home-update-content"

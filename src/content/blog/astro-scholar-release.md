@@ -156,9 +156,9 @@ Keep implementation details available without placing them in the main reading p
 ### Link related pages
 
 Wikilinks connect a post to the site's other collections:
-[[/projects|project pages]], [[/publications|publications]],
-[[/teaching|teaching notes]], and [[/blog|other research posts]]. Regular
-Markdown links remain available for external documentation and sources.
+[[/projects|project pages]], [[/publications|publications]], and
+[[/blog|other research posts]]. Regular Markdown links remain available for
+external documentation and sources.
 
 ### Keep evidence close to the claim
 
