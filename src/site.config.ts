@@ -17,7 +17,7 @@ export const SITE: SiteConfig = {
   defaultPostImage: "/img/social-preview.png",
 
   locale: {
-    lang: "zh-CN",
+    lang: "en-US",
     options: {
       day: "numeric",
       month: "short",
