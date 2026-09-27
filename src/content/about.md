@@ -1,7 +1,7 @@
-I study how computational systems shape public knowledge and collective
-decision-making. My work combines **open data**, reproducible analysis, and
-human-centered evaluation.
+I am a Master's student in Software Engineering at Peking University (PKU). My
+research sits at the intersection of machine learning and systems, with a focus
+on ML system architecture, training efficiency, and resource-aware scheduling.
 
-This site is generic demonstration content for Astro Scholar. Replace the
-profile, publications, projects, and writing with your own work through the
-Markdown-first customization surfaces documented in the repository.
+:::note
+I am currently interning at Moore Threads, working on training acceleration.
+:::

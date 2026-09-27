@@ -9,7 +9,7 @@ tags:
   - theme
   - markdown
 authors:
-  - mychiffon
+  - destinykami
 stage: evergreen
 audience: Researchers, students, and technical writers building an academic site with Astro.
 ---

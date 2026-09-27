@@ -7,17 +7,17 @@ import type {
 } from "@/types"
 
 export const SITE: SiteConfig = {
-  title: "My Scholar",
+  title: "Chengshuo Zheng",
   description:
-    "Research in computational social science, open methods, and responsible computing.",
-  href: "https://myscholar.pages.dev",
-  author: "Alex Morgan",
+    "Research on ML systems: architecture, training efficiency, and resource-aware scheduling.",
+  href: "https://destinykami.github.io",
+  author: "Chengshuo Zheng",
   dir: "ltr",
   defaultPageImage: "/img/social-preview.png",
   defaultPostImage: "/img/social-preview.png",
 
   locale: {
-    lang: "en-US",
+    lang: "zh-CN",
     options: {
       day: "numeric",
       month: "short",
@@ -53,17 +53,14 @@ export const SITE: SiteConfig = {
 
 export const PROFILE: ProfileConfig = {
   name: SITE.title,
-  tagline: "Computational social scientist and open-methods",
-  email: "hi@mychiffonn.com",
-  location: "Example City",
-  pronouns: "they/them",
+  tagline: "Master's student @ Peking University",
+  email: "cszheng25@stu.pku.edu.cn",
   links: {
-    github: "https://github.com/mychiffonn",
-    website: "https://mychiffonn.com/",
+    github: "https://github.com/Destinykami",
   },
   highlightLinks: ["github"],
   linksPlacement: {
-    header: ["email", "github", "website"],
+    header: ["email", "github"],
     about: false,
     footer: false,
   },
@@ -84,10 +81,11 @@ export const NAVIGATION: LinkConfig[] = NAV_LINKS.map(({ href, label }) => ({
 export const PUB_CONFIG: PublicationConfig = {
   maxFirstAuthors: 6,
   maxLastAuthors: 1,
+  // Must match the author strings in src/content/publications/main.bib exactly.
   highlightAuthor: {
-    firstName: "Alex",
-    lastName: "Morgan",
-    aliases: ["A. Morgan"],
+    firstName: "Chengshuo",
+    lastName: "Zheng",
+    aliases: ["C. Zheng"],
   },
   equalSymbols: {
     first: "*",
@@ -99,9 +97,9 @@ export const PUB_CONFIG: PublicationConfig = {
 
 export const FOOTER: FooterConfig = {
   credits: true,
-  sourceCode: "https://github.com/mychiffonn/myscholar",
+  sourceCode: "https://github.com/Destinykami/Destinykami.github.io",
   sourceContent:
-    "https://github.com/mychiffonn/myscholar/tree/main/src/content",
+    "https://github.com/Destinykami/Destinykami.github.io/tree/main/src/content",
   footerLinks: [],
 }
 
