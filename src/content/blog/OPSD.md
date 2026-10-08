@@ -1,3 +1,15 @@
+---
+title: OPSD paper reading
+description: A blog about OPSD paper reading.
+createdAt: 2026-10-8T12:00:00
+tags:
+  - LLM
+  - Post-Training
+  - OPD
+authors:
+  - destinykami
+---
+
 # OPSD
 
 ## 一、背景
