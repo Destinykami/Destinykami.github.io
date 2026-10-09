@@ -1,6 +1,6 @@
 ---
-title: Generative Agents_Interactive Simulacra of Human Behavior
-description: A blog about Generative Agents: Interactive Simulacra of Human Behavior paper reading.
+title: Generative Agents:Interactive Simulacra of Human Behavior
+description: A blog about Generative Agents:Interactive Simulacra of Human Behavior paper reading.
 createdAt: 2026-10-9T12:00:00
 tags:
   - LLM
