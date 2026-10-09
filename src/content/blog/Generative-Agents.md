@@ -13,7 +13,7 @@ authors:
 
 论文地址：https://arxiv.org/abs/2304.03442
 
-![alt text](image.png)
+![alt text](assets/image.png)
 
 ## 一、背景
 
