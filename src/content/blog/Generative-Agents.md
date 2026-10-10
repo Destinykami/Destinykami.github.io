@@ -743,3 +743,485 @@ $$
 
 ### 2.3 Planning and Reacting
 
+问题：Agent 如何利用过去的经历和当前环境，生成长期连贯的行为，并在发生意外事件时及时调整计划？
+
+LLM 可以生成单个时刻看起来合理的行为，却不一定能保证多个时刻之间的行为具有长期一致性，比如，在12:00时NPC决定去吃午饭，到了13:00它甚至可能再次决定去吃午饭。论文对此有一个很重要的判断：如果只优化当前时刻行为的合理性，就可能牺牲长期行为的合理性。这里的问题不是 LLM 不知道人一天通常吃几顿饭，而是每次独立调用 LLM 时，缺少一个能够约束未来行为的长期计划。
+
+#### 2.3.1 Planning
+
+论文使用层次化规划(Hierarchical Planning)，先生成一个粗粒度的长期计划，再不断将计划分解为更细粒度的行动。可以理解为：
+
+$$\boxed{ \text{Daily Plan} \rightarrow \text{Hourly Plan} \rightarrow \text{Minute-level Actions} }$$
+
+它与任务规划中的 Hierarchical Task Network（HTN）在思想上具有相似性，但论文并没有实现严格的 HTN 规划器，而是使用 LLM 进行递归分解。
+
+---- 
+##### 第一步：生成 Daily Plan
+
+论文使用 Eddy Lin 作为例子。
+
+Eddy 是一个 19 岁的大学生，学习音乐理论与作曲。
+
+他的初始人物设定包括：
+
+```
+Name: Eddy Lin (age: 19)
+
+Innate traits:
+friendly, outgoing, hospitable
+
+Background:
+Eddy is a student at Oak Hill College,
+studying music theory and composition.
+
+Eddy is working on a composition project
+for his college class.
+
+Eddy wants to dedicate more hours
+to his composition project.
+```
+
+然后系统提供 Eddy 前一天的活动摘要：
+
+```
+Yesterday:
+
+1. Woke up at 7:00 AM.
+2. Completed the morning routine.
+3. Attended classes.
+4. Worked on school assignments.
+5. Went to sleep around 10:00 PM.
+```
+
+最后给出当前日期：
+
+```
+Today is February 13.
+
+Here is Eddy's plan today in broad strokes:
+
+1)
+```
+
+让 LLM 接着生成一整天的计划，这里使用了 Prompt Completion 的方式，让模型续写计划。
+
+##### **LLM 生成的结果**
+
+例如：
+```
+1. 08:00 - Wake up and complete morning routine.
+
+2. 10:00 - Go to Oak Hill College for classes.
+
+3. 12:00 - Have lunch.
+
+4. 13:00 - Work on music composition.
+
+5. 17:30 - Have dinner.
+
+6. 19:00 - Finish school assignments.
+
+7. 23:00 - Go to bed.
+```
+
+论文中，一天通常被划分为 **5～8 个较大的时间块**，每一个时间块代表一个高层次活动，这些活动与 Agent 的人物设定和近期经历有关。
+
+例如：
+
+Eddy 是音乐专业学生，并且最近很重视自己的作曲项目，所以他安排较多时间作曲是合理的,反过来，如果 Eddie 是一名咖啡师，他的计划自然应该与咖啡馆工作有关。
+
+因此：
+
+$$ Plan_{day} = LLM( Persona, RecentExperience, PreviousDay ) $$
+
+注意这里是使用Summary来制定计划，而不是Memory Retrieval，这两种用法并不矛盾，这里用摘要是为了提供制定日程需要的宏观背景，当需要具体细节的时候Agent仍然可以通过Retrieval获取原始记忆。
+
+---- 
+
+##### **第二步：将 Daily Plan 分解成 Hourly Plan**
+
+现在 Eddy 的计划中存在：
+
+```
+13:00 - 17:00
+
+Work on music composition.
+```
+
+如果直接执行这个计划，会出现什么问题？
+
+NPC 可能从下午一点开始，一直坐在桌前，直到下午五点。
+
+从长期目标看没有问题，但是这种表现并不真实。
+
+人在进行四小时的创作时，通常需要：
+
+- 构思想法
+- 尝试创作
+- 修改作品
+- 休息
+- 整理成果
+
+所以系统继续使用 LLM 分解任务。
+
+例如：
+
+```
+High-level Activity:
+
+13:00 - 17:00
+Work on music composition.
+
+Break this activity into hour-long tasks.
+```
+
+生成：
+
+|时间|子任务|
+|---|---|
+|13:00–14:00|构思作曲项目的主题|
+|14:00–15:00|编写旋律|
+|15:00–16:00|修改和完善作品|
+|16:00–17:00|休息、检查和润色作品|
+
+于是，原本一个持续四小时的高层任务，被拆解成四个相对具体的活动。
+
+形式化表示：
+
+$$ P=\{p_1,p_2,\ldots,p_n\} $$
+对于较粗粒度任务 \(p_i\)，继续生成：
+
+$$ Decompose(p_i) = \{p_{i1},p_{i2},\ldots,p_{ik}\} $$
+
+各个子任务共同实现父任务。
+
+这里本质上是一个递归的任务分解过程。
+
+---
+##### 第三步：继续分解成 5～15 分钟的行动
+
+论文还会将小时级任务进一步细化。
+```
+16:00 - 17:00
+
+Take a break and recharge,
+then review the composition.
+```
+
+可以被进一步分解为：
+
+|时间|行为|
+|---|---|
+|16:00|吃一点零食|
+|16:05|在工作区域附近散步|
+|16:15|继续思考音乐创作|
+|16:30|检查作曲项目|
+|16:50|整理工作区域|
+
+论文采用的最细粒度通常为 **5～15 分钟**，这个粒度可以根据需要调整。
+
+这对游戏 NPC 非常重要。
+
+例如，你可能希望玩家看到：
+
+```
+13:00 NPC 坐在钢琴前构思。
+
+13:15 NPC 开始弹奏。
+
+13:45 NPC 停下来修改乐谱。
+
+14:00 NPC 继续练习。
+```
+
+而不是：
+
+```
+13:00 NPC 开始作曲。
+
+17:00 NPC 结束作曲。
+```
+
+层次化规划让 NPC 的行为更丰富，也使角色看起来更真实。
+
+##### 为什么不直接一次性生成完整的分钟级计划？
+假设一天按 5 分钟划分：
+
+$$N=\frac{24\times 60}{5}=288 $$
+
+直接让 LLM 生成 288 个行动，不仅输出很长，也很难保证整体一致性。
+
+分层生成有几个优势：
+
+**第一，降低单次生成复杂度。**
+
+模型只需要关注当前层级需要的细节。
+
+**第二，保证高层目标一致。**
+
+例如，13:00～17:00 的所有细粒度动作都应该服务于作曲这个目标。
+
+**第三，便于局部修改。**
+
+如果下午三点发生突发事件，可以修改之后的计划，而不一定重新生成一整天。
+
+第三点是这种架构的工程优势；论文具体实现采用的是从反应发生时刻开始重新生成后续计划。
+##### Plan的存储
+
+Memory Stream 实际上保存三类信息：
+
+|Memory 类型|表示什么|时间方向|
+|---|---|---|
+|Observation|已经发生了什么|过去|
+|Reflection|根据已有经历得出了什么认识|对过去的抽象|
+|Plan|未来准备做什么|未来|
+
+其中Plan 和 Reflection 一样，可以参与后续 Retrieval。
+这意味着 Agent 在决定当前行为时，不仅能考虑过去做过什么，还能够考虑原本打算做什么。如果没有 Plan，它可能再次根据当前环境随机决定一个看似合理的行为，这是论文解决长期行为一致性的核心设计之一。
+#### 2.3.2 Reacting and Updating Plans
+
+假设某个NPC已经制定好了一天的日程，但是游戏世界并不会完全按照他的计划发展，如果Agent严格执行原计划，就无法表现出真实的人类行为。计划应当保持长期一致性，但不能成为不可修改的脚本，论文中引入了Reacting来让Agent对计划进行修改。
+
+论文描述了一个持续运行的 Action Loop。
+
+```
+             Environment
+                  │
+                  ▼
+              Perception
+                  │
+                  ▼
+              Observation
+                  │
+                  ▼
+             Memory Stream
+                  │
+                  ▼
+          是否需要作出反应？
+              /       \
+             /         \
+           No          Yes
+           │            │
+           ▼            ▼
+      Continue Plan   React
+           │            │
+           │            ▼
+           │        Update Plan
+           │            │
+           └──────┬─────┘
+                  ▼
+                Action
+                  │
+                  ▼
+             Environment
+```
+
+在每个仿真时间步：
+
+1. Agent 感知周围环境。
+2. 将感知结果记录为 Observation。
+3. 判断当前事件是否值得作出反应。
+4. 如果不需要反应，继续执行既有计划。
+5. 如果需要反应，生成新的行动，并更新后续计划。
+##### 和传统 ReAct Agent 有什么区别？
+
+这里的 Reacting 不应直接等同于后来常说的 **ReAct** 框架。
+
+两者的关注点不同。
+
+ReAct 框架主要强调推理与工具行动交替进行。
+
+而 Generative Agents 的 Reacting 更强调：
+
+- NPC 是否应该响应某个环境事件。
+- 该响应是否符合其历史经历与人际关系。
+- 响应发生后如何调整原有的时间计划。
+
+简单理解：
+
+**Generative Agents 的 Planning 解决长期行为连贯性，Reacting 解决对动态环境的适应性。**
+
+#### 2.3.3 Agent之间的对话
+当 Reaction 涉及两个 Agent 时，还需要解决：**如何生成符合双方身份、关系和历史经历的对话？**
+
+论文中的对话并不是由单个 LLM 一次性写出两个人的完整剧本，而是双方分别基于自己的记忆和当前对话历史，逐轮生成发言，因为每个 Agent 具有不同的 Memory Stream，这种设计有助于实现**非全知（Non-omniscient）的 NPC 交互**，即角色的发言取决于它自身所知道的信息。
+
+#### 2.3.4 Planning and Reacting执行流程
+
+假设 Agent 每天早上生成一天的计划，之后随着游戏时间推进，执行以下循环：
+
+```
+                 Start of Day
+                      │
+                      ▼
+             Generate Daily Plan
+                      │
+                      ▼
+             Decompose into Tasks
+                      │
+                      ▼
+              Memory Stream
+                 Store Plan
+                      │
+                      ▼
+           ┌────── Action Loop ──────┐
+           │                         │
+           │     Perceive World      │
+           │            │            │
+           │            ▼            │
+           │    Store Observation    │
+           │            │            │
+           │            ▼            │
+           │    Retrieve Memories    │
+           │            │            │
+           │            ▼            │
+           │      Need React?        │
+           │        /      \         │
+           │       No      Yes       │
+           │       │        │        │
+           │       │        ▼        │
+           │       │    Generate     │
+           │       │    Reaction     │
+           │       │        │        │
+           │       │        ▼        │
+           │       │    Replanning   │
+           │       │        │        │
+           │       ▼        ▼        │
+           │      Execute Action     │
+           │            │            │
+           │            ▼            │
+           │     Update World        │
+           │                         │
+           └─────────────────────────┘
+```
+
+需要注意，这里只是对整体流程的抽象。
+实际上，Reflection 也会在满足触发条件时运行，并把新的高层次认知写回 Memory Stream。
+### 2.4 小结
+
+|模块|核心问题|主要作用|
+|---|---|---|
+|Memory Retrieval|现在需要回忆什么？|提供相关历史信息|
+|Reflection|这些经历说明了什么？|形成高层次认知|
+|Planning|未来应该做什么？|保持长期行为一致性|
+|Reacting|环境变化后怎么办？|动态调整行为|
+|Dialogue|应该如何与其他角色交流？|生成符合记忆和关系的对话|
+
+## 三、问题
+### 3.1 问题一：频繁 Replanning 的计算开销
+论文在每个仿真时间步感知环境，并利用 LLM 判断是否需要反应。
+
+当 Agent 数量增加时，这会带来大量模型调用。
+
+假设一个游戏有 100 个 NPC。
+
+每分钟进行一次需要 LLM 参与的反应判断，每小时就需要进行 6000 次判断。
+
+这还没有计算：
+- Memory Retrieval
+- Reflection
+- Planning
+- Dialogue
+因此，大规模游戏世界中很难让所有 NPC 在每个时间步都进行完整的 LLM 推理。
+
+### 3.2 问题二：LLM 生成的 Plan 不一定可执行
+
+论文的 Planning 主要解决的是行为的合理性和连贯性，它并没有提供一个完整的、形式化的约束规划系统。
+
+论文第 5 节介绍了环境树和位置选择机制，Agent 会根据自己掌握的环境信息选择活动地点，再通过传统游戏寻路算法移动到对应位置，但这仍然不能确保每个高层次目标都具有可执行性。
+实际游戏中，可以考虑：
+
+$$\boxed{ LLM Planner + Constraint Validator + Game Engine } $$
+
+具体流程：
+```
+LLM generates plan
+        │
+        ▼
+Check preconditions
+        │
+        ▼
+Is action executable?
+     /       \
+    Yes       No
+     │         │
+     ▼         ▼
+ Execute    Replanning
+```
+
+只有条件满足才能执行，这有助于减少 NPC 生成不符合游戏规则的行为。
+
+### 3.3 问题三：长期计划与突发事件的平衡
+
+假设 NPC 原本计划：
+
+```
+14:00 - 17:00
+Prepare for an important exam.
+```
+
+14:30 时，玩家邀请 NPC 去参加聚会，NPC应该接受吗？
+
+如果 NPC 总是接受新邀请，就会不断放弃自己的长期目标，但如果 NPC 完全不接受邀请，又会显得僵硬。
+
+这实际上是：
+
+**Goal Persistence（目标持续性）与 Behavioral Flexibility（行为灵活性）的权衡。**
+
+论文使用 LLM 判断是否 React，但没有提出一个严格的决策函数来平衡所有目标。
+
+如果要做进一步改进，可以引入事件优先级、目标重要性和计划中断成本。
+
+例如：
+
+$$ U(a) = V_{\text{social}}(a) + V_{\text{goal}}(a) - C_{\text{interrupt}}(a) $$
+
+其中：
+
+- $V_{\text{social}}$：参与社交活动的收益。
+- $V_{\text{goal}}$：该行动对当前目标的价值。
+- $C_{\text{interrupt}}$：中断原计划的代价。
+
+这样，不同 NPC 可以根据其人格和当前目标，形成不同的决策。
+
+例如：
+
+一个非常重视学业的 NPC，可能拒绝玩家邀请。
+
+一个热衷社交的 NPC，可能更倾向于参加聚会。
+
+
+## 四、快速问答
+### 4.1 Generative Agents 是如何实现 Planning and Reacting？
+> Generative Agents 的 Planning 主要解决 LLM 单步行为生成缺乏长期一致性的问题。因为如果每个时间步都独立生成动作，虽然每个动作在当前时刻看起来合理，但连续执行时可能产生重复吃饭等不连贯行为。
+> 因此，论文提出了一种基于 LLM 的层次化规划机制。首先结合 Agent 的人物设定、近期经历和前一天的活动，生成包含 5～8 个时间块的 Daily Plan；随后将计划递归分解为小时级任务，再进一步分解为 5～15 分钟的具体行动。
+> 生成的 Plan 会作为一种记忆保存到 Memory Stream 中，与 Observation 和 Reflection 一起参与后续 Retrieval，从而保持行为的时间一致性。
+> 对于动态环境，Agent 在每个仿真时间步感知周围事件，并结合相关历史记忆，让 LLM 判断是否需要对事件作出反应。如果需要，则生成相应行为，并从当前时间开始重新生成后续计划。
+> 如果 Reaction 涉及其他 Agent，则双方根据各自的人物设定、关系记忆和对话历史，轮流生成对话。
+> 从工程角度看，这套架构能够实现具有长期连贯性的 NPC 行为，但在大规模游戏中仍然需要解决 LLM 推理成本、Plan 可执行性，以及频繁中断导致的目标不稳定等问题。
+
+### 4.2 Generative Agents 是怎么实现 Reflection 的？
+> Generative Agents 的 Reflection 机制主要解决原始事件记忆缺乏高层次抽象的问题。单纯的 Memory Retrieval 虽然能够召回历史经历，但 Agent 不一定能稳定地从这些经历中归纳出兴趣、人格特征或社交关系。
+> 具体实现上，论文采用基于 Importance 的触发策略，当近期事件的重要性累计超过 150 时启动 Reflection。
+> 系统首先取最近 100 条记忆，通过 LLM 生成三个值得反思的高层次问题。然后将每个问题作为 Query，利用前面介绍的 Recency、Importance 和 Relevance 检索相关记忆。
+> 接下来，LLM 根据检索到的证据生成高层次 Insights，并记录每个 Insight 对应的 Supporting Evidence，最后将其作为新的 Reflection 写入 Memory Stream。
+> 比较重要的是，Reflection 本身也可以被后续检索和反思，因此能够形成递归的 Reflection Tree，从具体事件逐步抽象出更高层次的角色认知。
+> 从游戏 Agent 的角度看，这实际上提供了一种基于交互历史动态形成角色认知的方式。但工程实现中还需要解决 Reflection 的错误累积、矛盾检测和过期更新等问题。
+
+## 五、总结
+
+这篇论文对游戏 NPC 和千人千面 Agent 的价值，在于它提出了一种动态人物建模方式。
+
+传统游戏 NPC 通常拥有预先编写的固定设定：
+
+> Isabella 性格开朗，喜欢交朋友。
+
+而 Generative Agents 允许人物在持续交互中积累经历，再通过 Retrieval 和 Reflection 影响后续行为。
+
+例如，假设玩家曾经帮助 Isabella 筹备活动，她可能会在未来再次见到玩家时，检索到这段互动，并表现出更亲近的态度。
+
+如果玩家曾经爽约，则相关负面经历也可能影响她之后的反应。
+
+这意味着**NPC 的行为不再完全由静态 Persona 决定，而是由 Persona、历史经历以及当前情境共同决定。**
+
+当然，这并不意味着论文已经解决了长期记忆的所有问题。随着记忆数量增长，检索错误、记忆冲突、重要性评分不准确等问题依然存在。
