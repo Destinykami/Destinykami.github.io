@@ -1,6 +1,6 @@
 ---
 title: Mem0 paper reading
-description: A blog about Generative Agents_Interactive Simulacra of Human Behavior paper reading.
+description: A blog about Mem0 paper reading.
 createdAt: 2026-10-11T12:00:00
 tags:
   - LLM
@@ -143,7 +143,7 @@ Decision：
 **Long Context 尝试让模型直接从完整历史中寻找信息，而 Memory System 在模型推理之前，就主动完成了一部分信息筛选。**
 
 # 二、架构
-![[Pasted image 20261010190435.png]]
+![alt text](assets/image-3.png)
 
 ## 2.1 Memory Extraction
 
